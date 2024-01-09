@@ -2,6 +2,8 @@
 
 In real world applications the data that we're dealing with is not always self-contained entities.
 
+## References Documents (Normalization)
+
 In Mongoose, a popular Object Data Modeling (ODM) library for MongoDB and Node.js, you can establish relationships between documents using referencing. There are two main types of referencing in Mongoose: **population** and **manual referencing**.
 
 ## 1. Population (Using `populate()` method):
@@ -191,6 +193,69 @@ Book.findOne({ title: "The Book Title" }).exec((err, book) => {
 
 In summary, `exec()` is used to execute Mongoose queries and provides a way to handle both the results and potential errors in a callback function. It's especially useful when dealing with asynchronous operations in Node.js.
 
-## References Documents (Normalization)
-
 ## Using Embedded Documents (DeNormalization)
+
+In Mongoose, embedding documents involves nesting one schema within another, allowing you to store documents within documents. This is an alternative to referencing documents, which involves storing references to documents in other collections. Embedding is often used when there is a one-to-many or one-to-few relationship between entities, and the data in the embedded documents is tightly related to the parent document.
+
+Let's go through an example to illustrate how you can embed documents in Mongoose:
+
+```javascript
+const mongoose = require("mongoose");
+
+// Define a schema for the embedded documents (Comment)
+const commentSchema = new mongoose.Schema({
+  text: String,
+  user: String,
+});
+
+// Define a schema for the parent document (Post) that embeds the Comment schema
+const postSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  comments: [commentSchema], // Embedding Comment documents
+});
+
+// Create models based on the schemas
+const Post = mongoose.model("Post", postSchema);
+
+// Create a new post with embedded comments
+const newPost = new Post({
+  title: "My First Post",
+  content: "This is the content of my post.",
+  comments: [
+    { text: "Great post!", user: "User1" },
+    { text: "I enjoyed reading this.", user: "User2" },
+  ],
+});
+
+// Save the post to the database
+newPost.save((err, savedPost) => {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log(savedPost);
+  }
+});
+```
+
+In this example:
+
+1. The `commentSchema` defines the structure of the embedded documents (comments) with fields such as `text` and `user`.
+2. The `postSchema` includes an array field `comments`, which is of type `commentSchema`. This is where the Comment documents will be embedded within the Post document.
+3. When creating a new Post, you can include an array of Comment objects directly in the `comments` field.
+4. The `save()` method is used to save the new post to the database.
+
+When querying for a post, you will get both the post data and the embedded comments:
+
+```javascript
+// Query for a post and its embedded comments
+Post.findOne({ title: "My First Post" }, (err, post) => {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log(post);
+  }
+});
+```
+
+In summary, embedding documents in Mongoose involves defining a schema for the embedded documents and then including that schema as a field in the parent document's schema. This approach is suitable when the data in the embedded documents is closely related to the parent document and doesn't need to be referenced independently.
